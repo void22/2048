@@ -27,7 +27,6 @@ public class Tile
     {
         if (_currentValue != value)
         {
-            Debug.Log("Value changed: " + _currentValue.ToString() + ", " + value.ToString());
             _currentValue = value;
             _tile.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("2048_" + value.ToString());
         }

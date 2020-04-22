@@ -30,31 +30,24 @@ public class GameManager : MonoBehaviour
     {
         if (State == GameState.Running)
         {
-            Direction direction = Direction.None;
-
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                direction = Direction.Left;
+                _table.Move(Direction.Left);
             }
             else if (Input.GetKeyDown(KeyCode.RightArrow))
             {
-                direction = Direction.Right;
+                _table.Move(Direction.Right);
             }
             else if (Input.GetKeyDown(KeyCode.UpArrow))
             {
-                direction = Direction.Up;
+                _table.Move(Direction.Up);
             }
             else if (Input.GetKeyDown(KeyCode.DownArrow))
             {
-                direction = Direction.Down;
-            }
+                _table.Move(Direction.Down);
+            }                
 
-            if (direction != Direction.None)
-            {
-                _table.Move(direction);
-                _table.UpdateTiles();
-            }
-            
+            _table.UpdateTiles();
             ElapsedTime = DateTime.Now - _start;
         }
     }

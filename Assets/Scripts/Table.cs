@@ -51,15 +51,6 @@ public class Table
         SetRandomTile();
     }
 
-    public void UpdateEmptyList()
-    {
-        _emptyPositions.Clear();
-
-        for (int i = 0; i < _values.Length; i++)
-            if (_values[i] == 0)
-                _emptyPositions.Add(i);
-    }
-
     public bool IsPositionEmpty(int x, int y)
     {
         return _values[(4 * y) + x] == 0;
@@ -93,7 +84,6 @@ public class Table
     public int SetRandomTile()
     {
         int index = Random.Range(0, _emptyPositions.Count);
-        Debug.Log("Random tile: " + index.ToString());
 
         SetPosition(index, 2);
 
@@ -116,10 +106,18 @@ public class Table
         }
     }
 
+    public void UpdateEmptyList()
+    {
+        _emptyPositions.Clear();
+
+        for (int i = 0; i < _values.Length; i++)
+            if (_values[i] == 0)
+                _emptyPositions.Add(i);
+    }
+
     public void Move(GameManager.Direction direction)
     {
         bool tileMoved = false;
-        Debug.Log("Tiles moving to " + direction.ToString());
 
         for (int i = 0; i < 4; i++)
         {
@@ -130,7 +128,7 @@ public class Table
                     break;
 
                 case GameManager.Direction.Right:
-                    while(MoveRight(i)) { tileMoved = true; }
+                    while (MoveRight(i)) { tileMoved = true; }
                     break;
 
                 case GameManager.Direction.Up:
@@ -156,10 +154,17 @@ public class Table
 
         for (int i = 0; i < 3; i++)
         {
-            if (row[i] == 0 && row[i + 1] != 0)
+            if (_values[row[i]] == 0 && _values[row[i + 1]] != 0)
             {
-                row[i] = row[i + 1];
-                row[i + 1] = 0;
+                _values[row[i]] = _values[row[i + 1]];
+                _values[row[i + 1]] = 0;
+                return true;
+            }
+
+            if (_values[row[i]] != 0 && _values[row[i]] == _values[row[i + 1]])
+            {
+                _values[row[i]] *= 2;
+                _values[row[i + 1]] = 0;
                 return true;
             }
         }
@@ -173,10 +178,17 @@ public class Table
 
         for (int i = 3; i > 0; i--)
         {
-            if (row[i] == 0 && row[i - 1] != 0)
+            if (_values[row[i]] == 0 && _values[row[i - 1]] != 0)
             {
-                row[i] = row[i - 1];
-                row[i - 1] = 0;
+                _values[row[i]] = _values[row[i - 1]];
+                _values[row[i - 1]] = 0;
+                return true;
+            }
+
+            if (_values[row[i]] != 0 && _values[row[i]] == _values[row[i - 1]])
+            {
+                _values[row[i]] *= 2;
+                _values[row[i - 1]] = 0;
                 return true;
             }
         }

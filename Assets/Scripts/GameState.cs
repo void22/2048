@@ -3,7 +3,6 @@
     public enum GameState
     {
         Stopped,
-        Idle,
         Running
     }
 }

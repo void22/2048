@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -12,6 +13,11 @@ namespace Assets.Scripts
         private List<Tile[]> _columns = new List<Tile[]>();
         private List<Tile[]> _rows = new List<Tile[]>();
         private List<Tile> _emptyTiles = new List<Tile>();
+        private readonly bool[] _moveFinished = new bool[] { true, true, true, true };
+        private bool _tileMoved = false;
+
+        [Range(0, 2f)]
+        private readonly float _delay = 0.09f;
         #endregion
 
         #region Properties
@@ -22,6 +28,8 @@ namespace Assets.Scripts
         public Game(GameManager gameManager)
         {
             _gameManager = gameManager;
+
+            Create();
         }
         #endregion
 
@@ -56,10 +64,14 @@ namespace Assets.Scripts
             _rows.Add(new Tile[] { _tiles[12], _tiles[13], _tiles[14], _tiles[15] });
 
             _emptyTiles.AddRange(_tiles);
+
+            SetAllTile(2048);
+            UpdateTiles();
         }
 
         public void Init()
         {
+            SetAllTile(0);
             SetRandomTile();
             SetRandomTile();
             UpdateTiles();
@@ -69,6 +81,13 @@ namespace Assets.Scripts
 
         public void Update(GameManager.Direction direction)
         {
+
+            if (_delay > 0)
+            {
+                _gameManager.StartCoroutine(UpdateCoroutine(direction));
+                return;
+            }
+
             ResetMergedFlags();
 
             bool tileMoved = false;
@@ -99,36 +118,100 @@ namespace Assets.Scripts
             {
                 UpdateEmptyList();
                 SetRandomTile();
+                UpdateTiles();
+
+                if (!IsValidMoveExist())
+                    GameOver();
+            }
+        }
+
+        public IEnumerator UpdateCoroutine(GameManager.Direction direction)
+        {
+            _gameManager.State = GameManager.GameState.MovingTiles;
+
+            ResetMergedFlags();
+
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                switch (direction)
+                {
+                    case GameManager.Direction.Left:
+                        _gameManager.StartCoroutine(ShiftLeftCoroutine(_rows[i], i));
+                        break;
+
+                    case GameManager.Direction.Right:
+                        _gameManager.StartCoroutine(ShiftRightCoroutine(_rows[i], i));
+                        break;
+
+                    case GameManager.Direction.Up:
+                        _gameManager.StartCoroutine(ShiftLeftCoroutine(_columns[i], i));
+                        break;
+
+                    case GameManager.Direction.Down:
+                        _gameManager.StartCoroutine(ShiftRightCoroutine(_columns[i], i));
+                        break;
+                }
+
+                UpdateTiles();
+            }
+
+            while (!(_moveFinished[0] && _moveFinished[1] && _moveFinished[2] && _moveFinished[3]))
+                yield return null;
+
+            if (_tileMoved)
+            {
+                UpdateEmptyList();
+                SetRandomTile();
+                UpdateTiles();
 
                 if (!IsValidMoveExist())
                     GameOver();
             }
 
-            UpdateTiles();
+            _gameManager.State = GameManager.GameState.WaitingForInput;
+            _gameManager.StopAllCoroutines();
+        }
+
+        private void SetAllTile(int value)
+        {
+            foreach (Tile tile in _tiles)
+                tile.Value = value;
         }
 
         private void GameWon()
         {
-            _gameManager.State = GameManager.GameState.Stopped;
+            _gameManager.State = GameManager.GameState.GameOver;
         }
 
         private void GameOver()
         {
-            _gameManager.State = GameManager.GameState.Stopped;
+            _gameManager.State = GameManager.GameState.GameOver;
         }
 
         private void UpdateTiles()
         {
-            for (int i = 0; i < 16; i++)
-            {
-                if (_tiles[i].Value == 0)
-                {
-                    _tiles[i].Hide();
-                }
+            foreach (Tile tile in _tiles)
+                if (tile.Value == 0)
+                    tile.Hide();
                 else
-                {
-                    _tiles[i].Show();
-                }
+                    tile.Show();
+        }
+
+        private void SetRandomTile()
+        {
+            if (_emptyTiles.Count > 0)
+            {
+                int index = Random.Range(0, _emptyTiles.Count);
+                int chance = Random.Range(0, 9);
+
+                // 10% chance to get tile with value of 4
+                if (chance == 0)
+                    _emptyTiles[index].Value = 4;
+                else
+                    _emptyTiles[index].Value = 2;
+
+                _emptyTiles[index].PlayAnimation("Create");
+                _emptyTiles.RemoveAt(index);
             }
         }
 
@@ -189,6 +272,7 @@ namespace Assets.Scripts
                     tiles[i].Value *= 2;
                     tiles[i + 1].Value = 0;
                     tiles[i].Merged = true;
+                    tiles[i].PlayAnimation("Merge");
                     Score += tiles[i].Value;
 
                     if (tiles[i].Value == 2048)
@@ -221,6 +305,7 @@ namespace Assets.Scripts
                     tiles[i].Value *= 2;
                     tiles[i - 1].Value = 0;
                     tiles[i].Merged = true;
+                    tiles[i].PlayAnimation("Merge");
                     Score += tiles[i].Value;
 
                     if (tiles[i].Value == 2048)
@@ -233,21 +318,30 @@ namespace Assets.Scripts
             return false;
         }
 
-        private void SetRandomTile()
+        private IEnumerator ShiftLeftCoroutine(Tile[] tiles, int index)
         {
-            if (_emptyTiles.Count > 0)
+            _moveFinished[index] = false;
+
+            while (ShiftLeft(tiles))
             {
-                int index = Random.Range(0, _emptyTiles.Count);
-                int chance = Random.Range(0, 9);
-
-                // 10% chance to get tile with value of 4
-                if (chance == 0)
-                    _emptyTiles[index].Value = 4;
-                else
-                    _emptyTiles[index].Value = 2;
-
-                _emptyTiles.RemoveAt(index);
+                _tileMoved = true;
+                yield return new WaitForSeconds(_delay);
             }
+
+            _moveFinished[index] = true;
+        }
+
+        private IEnumerator ShiftRightCoroutine(Tile[] tiles, int index)
+        {
+            _moveFinished[index] = false;
+
+            while (ShiftRight(tiles))
+            {
+                _tileMoved = true;
+                yield return new WaitForSeconds(_delay);
+            }
+
+            _moveFinished[index] = true;
         }
         #endregion
     }

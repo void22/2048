@@ -3,6 +3,7 @@
 public class Tile
 {
     private GameObject _tile;
+    private Animator _animator;
     private int _value;
 
     public int Value
@@ -25,9 +26,10 @@ public class Tile
     public Tile(string objectName)
     {
         _tile = GameObject.Find(objectName);
-        Value = 2048;
+        _animator = _tile.GetComponent<Animator>();
+        Value = 0;
         Merged = false;
-        Show();
+        Hide();
     }
 
     public void Show()
@@ -38,6 +40,11 @@ public class Tile
     public void Hide()
     {
         _tile.GetComponent<SpriteRenderer>().enabled = false;
+    }
+
+    public void PlayAnimation(string anim)
+    {
+        _animator.SetTrigger(anim);
     }
 }
 

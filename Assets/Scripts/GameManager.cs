@@ -1,16 +1,15 @@
 ﻿using Assets.Scripts;
-using System;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private DateTime _start;
-    private Game _game;
+    private Game _game = null;
 
     public enum GameState
     {
-        Stopped,
-        Running
+        WaitingForInput,
+        MovingTiles,
+        GameOver
     }
 
     public enum Direction
@@ -23,7 +22,6 @@ public class GameManager : MonoBehaviour
     };
 
     public GameState State { get; set; }
-    public TimeSpan ElapsedTime { get; private set; }
 
     public int Score
     {
@@ -33,13 +31,17 @@ public class GameManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        _game = new Game(this);
+        if (_game == null)
+            _game = new Game(this);
+
+        _game.Init();
+        State = GameState.WaitingForInput;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (State == GameState.Running)
+        if (State == GameState.WaitingForInput)
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
@@ -57,20 +59,12 @@ public class GameManager : MonoBehaviour
             {
                 _game.Update(Direction.Down);
             }
-
-            ElapsedTime = DateTime.Now - _start;
         }
     }
 
     public void StartGame()
     {
-        _game.Create();
-        State = GameState.Running;
-        _start = DateTime.Now;
-    }
-
-    public void StopGame()
-    {
-        State = GameState.Stopped;
+        _game.Init();
+        State = GameState.WaitingForInput;
     }
 }

@@ -17,7 +17,7 @@ namespace Assets.Scripts
         private bool _tileMoved = false;
 
         [Range(0, 2f)]
-        private readonly float _delay = 0.05f;
+        private readonly float _delay = 0.06f;
         #endregion
 
         #region Properties

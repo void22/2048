@@ -17,7 +17,7 @@ namespace Assets.Scripts
         private bool _tileMoved = false;
 
         [Range(0, 2f)]
-        private readonly float _delay = 0.09f;
+        private readonly float _delay = 0.05f;
         #endregion
 
         #region Properties
@@ -131,28 +131,27 @@ namespace Assets.Scripts
 
             ResetMergedFlags();
 
-            for (int i = 0; i < _rows.Count; i++)
+            switch (direction)
             {
-                switch (direction)
-                {
-                    case GameManager.Direction.Left:
+                case GameManager.Direction.Left:
+                    for (int i = 0; i < _rows.Count; i++)
                         _gameManager.StartCoroutine(ShiftLeftCoroutine(_rows[i], i));
-                        break;
+                    break;
 
-                    case GameManager.Direction.Right:
+                case GameManager.Direction.Right:
+                    for (int i = 0; i < _rows.Count; i++)
                         _gameManager.StartCoroutine(ShiftRightCoroutine(_rows[i], i));
-                        break;
+                    break;
 
-                    case GameManager.Direction.Up:
+                case GameManager.Direction.Up:
+                    for (int i = 0; i < _columns.Count; i++)
                         _gameManager.StartCoroutine(ShiftLeftCoroutine(_columns[i], i));
-                        break;
+                    break;
 
-                    case GameManager.Direction.Down:
+                case GameManager.Direction.Down:
+                    for (int i = 0; i < _columns.Count; i++)
                         _gameManager.StartCoroutine(ShiftRightCoroutine(_columns[i], i));
-                        break;
-                }
-
-                UpdateTiles();
+                    break;
             }
 
             while (!(_moveFinished[0] && _moveFinished[1] && _moveFinished[2] && _moveFinished[3]))
@@ -260,7 +259,6 @@ namespace Assets.Scripts
                 {
                     tiles[i].Value = tiles[i + 1].Value;
                     tiles[i + 1].Value = 0;
-
                     return true;
                 }
 
@@ -293,7 +291,6 @@ namespace Assets.Scripts
                 {
                     tiles[i].Value = tiles[i - 1].Value;
                     tiles[i - 1].Value = 0;
-
                     return true;
                 }
 
@@ -325,6 +322,7 @@ namespace Assets.Scripts
             while (ShiftLeft(tiles))
             {
                 _tileMoved = true;
+                UpdateTiles();
                 yield return new WaitForSeconds(_delay);
             }
 
@@ -338,6 +336,7 @@ namespace Assets.Scripts
             while (ShiftRight(tiles))
             {
                 _tileMoved = true;
+                UpdateTiles();
                 yield return new WaitForSeconds(_delay);
             }
 

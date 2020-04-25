@@ -4,8 +4,14 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    DateTime _start;
-    Table _table;
+    private DateTime _start;
+    private Game _game;
+
+    public enum GameState
+    {
+        Stopped,
+        Running
+    }
 
     public enum Direction
     {
@@ -16,13 +22,18 @@ public class GameManager : MonoBehaviour
         Down
     };
 
-    public GameState State { get; private set; }
+    public GameState State { get; set; }
     public TimeSpan ElapsedTime { get; private set; }
+
+    public int Score
+    {
+        get { return _game.Score; }
+    }
 
     // Use this for initialization
     void Start()
     {
-        _table = new Table();
+        _game = new Game(this);
     }
 
     // Update is called once per frame
@@ -32,30 +43,28 @@ public class GameManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                _table.Move(Direction.Left);
+                _game.Update(Direction.Left);
             }
             else if (Input.GetKeyDown(KeyCode.RightArrow))
             {
-                _table.Move(Direction.Right);
+                _game.Update(Direction.Right);
             }
             else if (Input.GetKeyDown(KeyCode.UpArrow))
             {
-                _table.Move(Direction.Up);
+                _game.Update(Direction.Up);
             }
             else if (Input.GetKeyDown(KeyCode.DownArrow))
             {
-                _table.Move(Direction.Down);
-            }                
+                _game.Update(Direction.Down);
+            }
 
-            _table.UpdateTiles();
             ElapsedTime = DateTime.Now - _start;
         }
     }
 
     public void StartGame()
     {
-        _table.Init();
-
+        _game.Create();
         State = GameState.Running;
         _start = DateTime.Now;
     }
